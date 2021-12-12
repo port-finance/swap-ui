@@ -15,11 +15,6 @@ import {
   useDexContext,
   FEE_MULTIPLIER,
 } from "./Dex";
-import {
-  useTokenListContext,
-  SPL_REGISTRY_SOLLET_TAG,
-  SPL_REGISTRY_WORM_TAG,
-} from "./TokenList";
 import { useOwnedTokenAccount } from "../context/Token";
 
 const DEFAULT_SLIPPAGE_PERCENT = 0.5;

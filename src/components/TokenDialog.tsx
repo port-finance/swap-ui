@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   TextField,
   List,
   ListItem,
@@ -16,7 +15,6 @@ import {
 } from "@material-ui/core";
 import { TokenIcon } from "./Swap";
 import { useSwappableTokens } from "../context/TokenList";
-import { useMediaQuery } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {
@@ -48,12 +46,10 @@ export default function TokenDialog({
   onClose: () => void;
   setMint: (mint: PublicKey) => void;
 }) {
-  const [tabSelection, setTabSelection] = useState(0);
   const [tokenFilter, setTokenFilter] = useState("");
   const filter = tokenFilter.toLowerCase();
   const styles = useStyles();
   const { swappableTokens } = useSwappableTokens();
-  const displayTabs = !useMediaQuery("(max-width:450px)");
   const selectedTokens = swappableTokens;
   let tokens =
     tokenFilter === ""

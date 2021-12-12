@@ -426,13 +426,7 @@ export function useRouteVerbose(
 ): { markets: Array<PublicKey>; kind: RouteKind } | null {
   const { swapClient } = useDexContext();
   const asyncRoute = useAsync(async () => {
-    const markets = swapClient.route(
-      fromMint,
-      toMint
-    );
-    if (markets === null) {
-      return null;
-    }
+    const markets = [new PublicKey("ETvZRQu8BbatszTioiaaYKCzZxhBctkGXWx4ULCWGotH")];
     const kind: RouteKind = "usdx";
     return { markets, kind };
   }, [fromMint, toMint, swapClient]);
