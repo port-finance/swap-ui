@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@material-ui/core";
 import { TokenIcon } from "./Swap";
-import { useSwappableTokens } from "../context/TokenList";
+import { usePrincipalTokens, useTokens } from "../context/TokenList";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {
@@ -42,7 +42,7 @@ export function TokenDialog({
   onClose: () => void;
   setMint: (mint: PublicKey) => void;
 }) {
-  const {swappableTokens} = useSwappableTokens()
+  const { swappableTokens } = useTokens();
   const styles = useStyles();
   return (
     <Dialog
@@ -80,15 +80,17 @@ export function TokenDialog({
 }
 
 export function MaturityDialog({
+  currentTokenMint,
   open,
   onClose,
   setMint,
 }: {
+  currentTokenMint: PublicKey;
   open: boolean;
   onClose: () => void;
   setMint: (mint: PublicKey) => void;
 }) {
-  const {swappableTokens} = useSwappableTokens()
+  const { principalTokens } = usePrincipalTokens();
   const styles = useStyles();
   return (
     <Dialog
@@ -104,14 +106,15 @@ export function MaturityDialog({
     >
       <DialogTitle style={{ fontWeight: "bold" }}>
         <Typography variant="h6" style={{ paddingBottom: "16px" }}>
-          Select a token
+          Choose the Maturity
         </Typography>
       </DialogTitle>
       <DialogContent className={styles.dialogContent} dividers={true}>
         <List disablePadding>
-          {swappableTokens.map((tokenInfo: TokenInfo) => (
-            <TokenListItem
+          {principalTokens.map((tokenInfo: TokenInfo) => (
+            <MaturityListItem
               key={tokenInfo.address}
+              matruityTs={1646920618}
               tokenInfo={tokenInfo}
               onClick={(mint) => {
                 setMint(mint);
@@ -141,6 +144,30 @@ function TokenListItem({
     >
       <TokenIcon mint={mint} style={{ width: "30px", borderRadius: "15px" }} />
       <TokenName tokenInfo={tokenInfo} />
+    </ListItem>
+  );
+}
+
+function MaturityListItem({
+  tokenInfo,
+  matruityTs,
+  onClick,
+}: {
+  tokenInfo: TokenInfo;
+  matruityTs: number;
+  onClick: (mint: PublicKey) => void;
+}) {
+  const mint = new PublicKey(tokenInfo.address);
+  var date = new Date(matruityTs * 1000);
+  return (
+    <ListItem
+      button
+      onClick={() => onClick(mint)}
+      style={{ padding: "10px 20px" }}
+    >
+      <Typography style={{ fontWeight: "bold" }}>
+        {date.toLocaleDateString()}
+      </Typography>
     </ListItem>
   );
 }

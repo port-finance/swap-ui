@@ -4,7 +4,7 @@ import { TokenListContainer } from "@solana/spl-token-registry";
 import { Provider } from "@project-serum/anchor";
 import { Swap as SwapClient } from "@project-serum/swap";
 import {
-  createMuiTheme,
+  createTheme,
   ThemeOptions,
   ThemeProvider,
 } from "@material-ui/core/styles";
@@ -21,10 +21,7 @@ import {
 } from "./context/Dex";
 import { TokenListContextProvider, useTokenMap } from "./context/TokenList";
 import { TokenContextProvider, useMint } from "./context/Token";
-import SwapCard, {
-  SwapButton,
-  SwapHeader,
-} from "./components/Swap";
+import SwapCard, { SwapButton, SwapHeader } from "./components/Swap";
 
 /**
  * A`Swap` component that can be embedded into applications. To use,
@@ -58,7 +55,7 @@ export default function Swap(props: SwapProps): ReactElement {
 
   // @ts-ignore
   const swapClient = new SwapClient(provider, tokenList);
-  const theme = createMuiTheme(
+  const theme = createTheme(
     materialTheme || {
       palette: {
         primary: {

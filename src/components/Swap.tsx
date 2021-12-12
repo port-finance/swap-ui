@@ -1,8 +1,5 @@
 import { useState } from "react";
-import {
-  PublicKey,
-  Keypair,
-} from "@solana/web3.js";
+import { PublicKey, Keypair } from "@solana/web3.js";
 import { BN } from "@project-serum/anchor";
 import {
   makeStyles,
@@ -27,7 +24,7 @@ import { useCanSwap, useReferral } from "../context/Swap";
 import { SettingsButton } from "./Settings";
 import { InfoLabel, InterestLabel } from "./Info";
 import { SOL_MINT } from "../utils/pubkeys";
-import { TokenDialog } from "./TokenDialog";
+import { MaturityDialog, TokenDialog } from "./TokenDialog";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -75,6 +72,12 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
     width: "50%",
+  },
+  maturitySelectorContainer: {
+    marginLeft: theme.spacing(1),
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
   },
   balanceContainer: {
     display: "flex",
@@ -203,10 +206,10 @@ function LendTokenForm({ style }: { style?: any }) {
 }
 
 function ChooseMaturityForm({ style }: { style?: any }) {
-  const { toMint, setToMint, toAmount, setToAmount } = useSwapContext();
+  const { fromMint, toMint, setToMint } = useSwapContext();
   const styles = useStyles();
 
-  const [showTokenDialog, setShowTokenDialog] = useState(false);
+  const [showMaturityDialog, setShowMaturityDialog] = useState(false);
   const tokenAccount = useOwnedTokenAccount(toMint);
   const mintAccount = useMint(toMint);
 
@@ -215,40 +218,21 @@ function ChooseMaturityForm({ style }: { style?: any }) {
     mintAccount &&
     tokenAccount.account.amount.toNumber() / 10 ** mintAccount.decimals;
 
-  const formattedAmount =
-    mintAccount && toAmount
-      ? toAmount.toLocaleString("fullwide", {
-          maximumFractionDigits: mintAccount.decimals,
-          useGrouping: false,
-        })
-      : toAmount;
-
   return (
     <div className={styles.swapTokenFormContainer} style={style}>
-      <div className={styles.swapTokenSelectorContainer}>
-        <TokenButton mint={toMint} onClick={() => setShowTokenDialog(true)} />
+      <div className={styles.maturitySelectorContainer}>
+        <MaturityButton mint={toMint} onClick={() => setShowMaturityDialog(true)} />
         <Typography color="textSecondary" className={styles.balanceContainer}>
           {tokenAccount && mintAccount
             ? `Balance: ${balance?.toFixed(mintAccount.decimals)}`
             : `-`}
         </Typography>
       </div>
-      <TextField
-        type="number"
-        value={formattedAmount}
-        onChange={(e) => setToAmount(parseFloat(e.target.value))}
-        InputProps={{
-          disableUnderline: true,
-          classes: {
-            root: styles.amountInput,
-            input: styles.input,
-          },
-        }}
-      />
-      <TokenDialog
+      <MaturityDialog
+        currentTokenMint={fromMint}
         setMint={setToMint}
-        open={showTokenDialog}
-        onClose={() => setShowTokenDialog(false)}
+        open={showMaturityDialog}
+        onClose={() => setShowMaturityDialog(false)}
       />
     </div>
   );
@@ -267,6 +251,23 @@ function TokenButton({
   return (
     <div onClick={onClick} className={styles.tokenButton}>
       <TokenIcon mint={mint} style={{ width: theme.spacing(4) }} />
+      <TokenName mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />
+      <ExpandMore />
+    </div>
+  );
+}
+
+function MaturityButton({
+  mint,
+  onClick,
+}: {
+  mint: PublicKey;
+  onClick: () => void;
+}) {
+  const styles = useStyles();
+
+  return (
+    <div onClick={onClick} className={styles.tokenButton}>
       <TokenName mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />
       <ExpandMore />
     </div>

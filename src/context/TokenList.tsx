@@ -5,19 +5,24 @@ import { MARCH_2022_PP_USDC_MINT, USDC_MINT } from "../utils/pubkeys";
 type TokenListContext = {
   tokenMap: Map<string, TokenInfo>;
   swappableTokens: TokenInfo[];
+  principalTokens: TokenInfo[];
 };
 const _TokenListContext = React.createContext<null | TokenListContext>(null);
 
-const swappableTokensMap = new Set<string>([
-  USDC_MINT.toString(),
-  MARCH_2022_PP_USDC_MINT.toString(),
+const swappableTokensMap = new Set<string>([USDC_MINT.toString()]);
+
+// underlying token maps to maturity timestamp then principal tokens
+const principalTokenMap = new Map<string, Map<number, string>>([
+  [
+    USDC_MINT.toString(),
+    // TODO: switch from the hardcoded timestamp to a timestamp fetched on-chain
+    new Map<number, string>([[1646920618, MARCH_2022_PP_USDC_MINT.toString()]]),
+  ],
 ]);
 
 export function TokenListContextProvider(props: any) {
   const tokenList = useMemo(() => {
     const list = props.tokenList.filterByClusterSlug("mainnet-beta").getList();
-    // Manually add a fake SOL mint for the native token. The component is
-    // opinionated in that it distinguishes between wrapped SOL and SOL.
     return list;
   }, [props.tokenList]);
 
@@ -39,13 +44,28 @@ export function TokenListContextProvider(props: any) {
       a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0
     );
     return tokens;
-  }, [tokenList, tokenMap]);
+  }, [tokenList]);
+
+  const principalTokens = useMemo(() => {
+    const allPrincipalTokens: Set<string> = new Set();
+    principalTokenMap.forEach(
+      m => m.forEach(p => allPrincipalTokens.add(p))
+    );
+    const tokens = tokenList.filter((t: TokenInfo) => {
+      return allPrincipalTokens.has(t.address);
+    });
+    tokens.sort((a: TokenInfo, b: TokenInfo) =>
+      a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0
+    );
+    return tokens;
+  }, [tokenList]);
 
   return (
     <_TokenListContext.Provider
       value={{
         tokenMap,
         swappableTokens,
+        principalTokens,
       }}
     >
       {props.children}
@@ -66,7 +86,12 @@ export function useTokenMap(): Map<string, TokenInfo> {
   return tokenMap;
 }
 
-export function useSwappableTokens() {
+export function useTokens() {
   const { swappableTokens } = useTokenListContext();
   return { swappableTokens };
+}
+
+export function usePrincipalTokens() {
+  const { principalTokens } = useTokenListContext();
+  return { principalTokens };
 }

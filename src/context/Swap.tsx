@@ -8,7 +8,11 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { Market } from "@project-serum/serum";
-import { MARCH_2022_PP_USDC_MINT, USDC_MINT, USDT_MINT } from "../utils/pubkeys";
+import {
+  MARCH_2022_PP_USDC_MINT,
+  USDC_MINT,
+  USDT_MINT,
+} from "../utils/pubkeys";
 import {
   useFairRoute,
   useRouteVerbose,

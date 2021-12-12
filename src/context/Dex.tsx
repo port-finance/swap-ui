@@ -11,11 +11,7 @@ import {
   OpenOrders,
   Orderbook as OrderbookSide,
 } from "@project-serum/serum";
-import {
-  DEX_PID,
-  SOL_MINT,
-  WRAPPED_SOL_MINT,
-} from "../utils/pubkeys";
+import { DEX_PID, SOL_MINT, WRAPPED_SOL_MINT } from "../utils/pubkeys";
 import { useTokenMap } from "./TokenList";
 import { setMintCache } from "./Token";
 
@@ -426,7 +422,9 @@ export function useRouteVerbose(
 ): { markets: Array<PublicKey>; kind: RouteKind } | null {
   const { swapClient } = useDexContext();
   const asyncRoute = useAsync(async () => {
-    const markets = [new PublicKey("ETvZRQu8BbatszTioiaaYKCzZxhBctkGXWx4ULCWGotH")];
+    const markets = [
+      new PublicKey("ETvZRQu8BbatszTioiaaYKCzZxhBctkGXWx4ULCWGotH"),
+    ];
     const kind: RouteKind = "usdx";
     return { markets, kind };
   }, [fromMint, toMint, swapClient]);
@@ -447,6 +445,6 @@ type Bbo = {
   bestBid?: number;
   bestOffer?: number;
   mid?: number;
-}
+};
 const _ORDERBOOK_CACHE = new Map<string, Promise<Orderbook>>();
 const _MARKET_CACHE = new Map<string, Promise<Market>>();
