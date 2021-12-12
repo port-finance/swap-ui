@@ -213,26 +213,15 @@ function ChooseMaturityForm({ style }: { style?: any }) {
   const styles = useStyles();
 
   const [showMaturityDialog, setShowMaturityDialog] = useState(false);
-  const tokenAccount = useOwnedTokenAccount(toMint);
-  const mintAccount = useMint(toMint);
-
-  const balance =
-    tokenAccount &&
-    mintAccount &&
-    tokenAccount.account.amount.toNumber() / 10 ** mintAccount.decimals;
 
   return (
     <div className={styles.swapTokenFormContainer} style={style}>
       <div className={styles.maturitySelectorContainer}>
+        <Typography>Maturity</Typography>
         <MaturityButton
           mint={toMint}
           onClick={() => setShowMaturityDialog(true)}
         />
-        <Typography color="textSecondary" className={styles.balanceContainer}>
-          {tokenAccount && mintAccount
-            ? `Balance: ${balance?.toFixed(mintAccount.decimals)}`
-            : `-`}
-        </Typography>
       </div>
       <MaturityDialog
         currentTokenMint={fromMint}
