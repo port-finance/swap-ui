@@ -25,7 +25,7 @@ import { useTokenMap } from "../context/TokenList";
 import { useMint, useOwnedTokenAccount } from "../context/Token";
 import { useCanSwap, useReferral } from "../context/Swap";
 import { SettingsButton } from "./Settings";
-import { InfoLabel } from "./Info";
+import { InfoLabel, InterestLabel } from "./Info";
 import { SOL_MINT } from "../utils/pubkeys";
 import { TokenDialog } from "./TokenDialog";
 
@@ -113,6 +113,7 @@ export default function SwapCard({
         <LendTokenForm style={swapTokenContainerStyle} />
         <ChooseMaturityForm style={swapTokenContainerStyle} />
         <InfoLabel />
+        <InterestLabel />
         <SwapButton />
       </div>
     </Card>

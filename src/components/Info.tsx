@@ -53,6 +53,25 @@ export function InfoLabel() {
   );
 }
 
+export function InterestLabel() {
+  const styles = useStyles();
+
+  const fair = useSwapFair();
+  const endTimeStampSecs = 1646920618
+  const secondsToMaturity = endTimeStampSecs - (Math.floor((new Date()).getTime() / 1000));
+  const yearInSecs = 365 * 24 * 60 * 60;
+
+  return (
+    <div className={styles.infoLabel}>
+      <Typography color="textSecondary" style={{ fontSize: "14px" }}>
+        {fair !== undefined
+          ? `${(((1 / fair) - 1) * 100 / secondsToMaturity * yearInSecs).toFixed(2)} % Fixed APY`
+          : `-`}
+      </Typography>
+    </div>
+  );
+}
+
 function InfoButton() {
   const styles = useStyles();
   return (
