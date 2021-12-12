@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { TokenInfo } from "@solana/spl-token-registry";
 import {
@@ -6,12 +5,9 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  TextField,
   List,
   ListItem,
   Typography,
-  Tabs,
-  Tab,
 } from "@material-ui/core";
 import { TokenIcon } from "./Swap";
 import { useSwappableTokens } from "../context/TokenList";
@@ -37,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function TokenDialog({
+export function TokenDialog({
   open,
   onClose,
   setMint,
@@ -46,20 +42,8 @@ export default function TokenDialog({
   onClose: () => void;
   setMint: (mint: PublicKey) => void;
 }) {
-  const [tokenFilter, setTokenFilter] = useState("");
-  const filter = tokenFilter.toLowerCase();
+  const {swappableTokens} = useSwappableTokens()
   const styles = useStyles();
-  const { swappableTokens } = useSwappableTokens();
-  const selectedTokens = swappableTokens;
-  let tokens =
-    tokenFilter === ""
-      ? selectedTokens
-      : selectedTokens.filter(
-          (t) =>
-            t.symbol.toLowerCase().startsWith(filter) ||
-            t.name.toLowerCase().startsWith(filter) ||
-            t.address.toLowerCase().startsWith(filter)
-        );
   return (
     <Dialog
       open={open}
@@ -76,18 +60,56 @@ export default function TokenDialog({
         <Typography variant="h6" style={{ paddingBottom: "16px" }}>
           Select a token
         </Typography>
-        <TextField
-          className={styles.textField}
-          placeholder={"Search name"}
-          value={tokenFilter}
-          fullWidth
-          variant="outlined"
-          onChange={(e) => setTokenFilter(e.target.value)}
-        />
       </DialogTitle>
       <DialogContent className={styles.dialogContent} dividers={true}>
         <List disablePadding>
-          {tokens.map((tokenInfo: TokenInfo) => (
+          {swappableTokens.map((tokenInfo: TokenInfo) => (
+            <TokenListItem
+              key={tokenInfo.address}
+              tokenInfo={tokenInfo}
+              onClick={(mint) => {
+                setMint(mint);
+                onClose();
+              }}
+            />
+          ))}
+        </List>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function MaturityDialog({
+  open,
+  onClose,
+  setMint,
+}: {
+  open: boolean;
+  onClose: () => void;
+  setMint: (mint: PublicKey) => void;
+}) {
+  const {swappableTokens} = useSwappableTokens()
+  const styles = useStyles();
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      scroll={"paper"}
+      PaperProps={{
+        style: {
+          borderRadius: "10px",
+          width: "420px",
+        },
+      }}
+    >
+      <DialogTitle style={{ fontWeight: "bold" }}>
+        <Typography variant="h6" style={{ paddingBottom: "16px" }}>
+          Select a token
+        </Typography>
+      </DialogTitle>
+      <DialogContent className={styles.dialogContent} dividers={true}>
+        <List disablePadding>
+          {swappableTokens.map((tokenInfo: TokenInfo) => (
             <TokenListItem
               key={tokenInfo.address}
               tokenInfo={tokenInfo}

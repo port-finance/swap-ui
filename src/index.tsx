@@ -22,12 +22,9 @@ import {
 import { TokenListContextProvider, useTokenMap } from "./context/TokenList";
 import { TokenContextProvider, useMint } from "./context/Token";
 import SwapCard, {
-  ArrowButton,
   SwapButton,
   SwapHeader,
-  SwapTokenForm,
 } from "./components/Swap";
-import TokenDialog from "./components/TokenDialog";
 
 /**
  * A`Swap` component that can be embedded into applications. To use,
@@ -174,10 +171,7 @@ export {
   Swap,
   SwapCard,
   SwapHeader,
-  SwapTokenForm,
-  ArrowButton,
   SwapButton,
-  TokenDialog,
   // Providers and context.
   // Swap.
   SwapContextProvider,

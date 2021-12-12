@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from "react";
 import { TokenInfo } from "@solana/spl-token-registry";
-import { SOL_MINT } from "../utils/pubkeys";
+import { MARCH_2022_PP_USDC_MINT, USDC_MINT } from "../utils/pubkeys";
 
 type TokenListContext = {
   tokenMap: Map<string, TokenInfo>;
@@ -8,36 +8,16 @@ type TokenListContext = {
 };
 const _TokenListContext = React.createContext<null | TokenListContext>(null);
 
-// Tag in the spl-token-registry for sollet wrapped tokens.
-export const SPL_REGISTRY_SOLLET_TAG = "wrapped-sollet";
-
-// Tag in the spl-token-registry for wormhole wrapped tokens.
-export const SPL_REGISTRY_WORM_TAG = "wormhole";
-
-const SOL_TOKEN_INFO = {
-  chainId: 101,
-  address: SOL_MINT.toString(),
-  name: "Native SOL",
-  decimals: "9",
-  symbol: "SOL",
-  logoURI:
-    "https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png",
-  tags: [],
-  extensions: {
-    website: "https://solana.com/",
-    serumV3Usdc: "9wFFyRfZBsuAha4YcuxcXLKwMxJR43S7fPfQLusDBzvT",
-    serumV3Usdt: "HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1",
-    coingeckoId: "solana",
-    waterfallbot: "https://t.me/SOLwaterfall",
-  },
-};
+const swappableTokensMap = new Set<string>([
+  USDC_MINT.toString(),
+  MARCH_2022_PP_USDC_MINT.toString(),
+]);
 
 export function TokenListContextProvider(props: any) {
   const tokenList = useMemo(() => {
     const list = props.tokenList.filterByClusterSlug("mainnet-beta").getList();
     // Manually add a fake SOL mint for the native token. The component is
     // opinionated in that it distinguishes between wrapped SOL and SOL.
-    list.push(SOL_TOKEN_INFO);
     return list;
   }, [props.tokenList]);
 
@@ -53,9 +33,7 @@ export function TokenListContextProvider(props: any) {
   // Tokens with USD(x) quoted markets.
   const swappableTokens = useMemo(() => {
     const tokens = tokenList.filter((t: TokenInfo) => {
-      const isUsdxQuoted =
-        t.extensions?.serumV3Usdt || t.extensions?.serumV3Usdc;
-      return isUsdxQuoted || t.address === "6cKnRJskSTonD6kZiWt2Fy3NB6ZND6CbgA3vHiZ1kHEU";
+      return swappableTokensMap.has(t.address);
     });
     tokens.sort((a: TokenInfo, b: TokenInfo) =>
       a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0

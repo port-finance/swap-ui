@@ -12,6 +12,10 @@ export const USDC_MINT = new PublicKey(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 );
 
+export const MARCH_2022_PP_USDC_MINT = new PublicKey(
+  "6cKnRJskSTonD6kZiWt2Fy3NB6ZND6CbgA3vHiZ1kHEU"
+);
+
 export const USDT_MINT = new PublicKey(
   "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
 );

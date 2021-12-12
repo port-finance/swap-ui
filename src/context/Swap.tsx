@@ -8,7 +8,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { Market } from "@project-serum/serum";
-import { SRM_MINT, USDC_MINT, USDT_MINT } from "../utils/pubkeys";
+import { MARCH_2022_PP_USDC_MINT, USDC_MINT, USDT_MINT } from "../utils/pubkeys";
 import {
   useFairRoute,
   useRouteVerbose,
@@ -71,8 +71,8 @@ export type SwapContext = {
 const _SwapContext = React.createContext<null | SwapContext>(null);
 
 export function SwapContextProvider(props: any) {
-  const [fromMint, setFromMint] = useState(props.fromMint ?? SRM_MINT);
-  const [toMint, setToMint] = useState(props.toMint ?? USDC_MINT);
+  const [fromMint, setFromMint] = useState(props.fromMint ?? USDC_MINT);
+  const [toMint, setToMint] = useState(props.toMint ?? MARCH_2022_PP_USDC_MINT);
   const [fromAmount, _setFromAmount] = useState(props.fromAmount ?? 0);
   const [toAmount, _setToAmount] = useState(props.toAmount ?? 0);
   const [isClosingNewAccounts, setIsClosingNewAccounts] = useState(false);
