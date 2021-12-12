@@ -8,7 +8,10 @@ import {
 import { Info } from "@material-ui/icons";
 import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
 import { PublicKey } from "@solana/web3.js";
-import { useTokenMap } from "../context/TokenList";
+import {
+  usePrincipalTokenMaturityMap,
+  useTokenMap,
+} from "../context/TokenList";
 import { useSwapContext, useSwapFair } from "../context/Swap";
 import { useMint } from "../context/Token";
 import { useRoute, useMarketName, useBbo } from "../context/Dex";
@@ -55,9 +58,14 @@ export function InfoLabel() {
 
 export function InterestLabel() {
   const styles = useStyles();
-
+  const { toMint } = useSwapContext();
+  const principalTokenMaturityMap = usePrincipalTokenMaturityMap();
   const fair = useSwapFair();
-  const endTimeStampSecs = 1646920618;
+
+  const endTimeStampSecs = principalTokenMaturityMap.get(toMint.toString());
+  if (!endTimeStampSecs) {
+    throw Error("no maturity found for give princiapl token!");
+  }
   const secondsToMaturity =
     endTimeStampSecs - Math.floor(new Date().getTime() / 1000);
   const yearInSecs = 365 * 24 * 60 * 60;
@@ -65,7 +73,7 @@ export function InterestLabel() {
   return (
     <div className={styles.infoLabel}>
       <Typography color="textSecondary" style={{ fontSize: "14px" }}>
-        {fair !== undefined
+        {fair !== undefined && secondsToMaturity
           ? `${(
               (((1 / fair - 1) * 100) / secondsToMaturity) *
               yearInSecs

@@ -10,7 +10,11 @@ import {
   Typography,
 } from "@material-ui/core";
 import { TokenIcon } from "./Swap";
-import { usePrincipalTokens, useTokens } from "../context/TokenList";
+import {
+  usePrincipalTokenMaturityMap,
+  usePrincipalTokens,
+  useTokens,
+} from "../context/TokenList";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {
@@ -91,6 +95,7 @@ export function MaturityDialog({
   setMint: (mint: PublicKey) => void;
 }) {
   const { principalTokens } = usePrincipalTokens();
+  const principalTokenMaturityMap = usePrincipalTokenMaturityMap();
   const styles = useStyles();
   return (
     <Dialog
@@ -114,7 +119,7 @@ export function MaturityDialog({
           {principalTokens.map((tokenInfo: TokenInfo) => (
             <MaturityListItem
               key={tokenInfo.address}
-              matruityTs={1646920618}
+              matruityTs={principalTokenMaturityMap.get(tokenInfo.address)}
               tokenInfo={tokenInfo}
               onClick={(mint) => {
                 setMint(mint);
@@ -154,11 +159,10 @@ function MaturityListItem({
   onClick,
 }: {
   tokenInfo: TokenInfo;
-  matruityTs: number;
+  matruityTs: number | undefined;
   onClick: (mint: PublicKey) => void;
 }) {
   const mint = new PublicKey(tokenInfo.address);
-  var date = new Date(matruityTs * 1000);
   return (
     <ListItem
       button
@@ -166,7 +170,7 @@ function MaturityListItem({
       style={{ padding: "10px 20px" }}
     >
       <Typography style={{ fontWeight: "bold" }}>
-        {date.toLocaleDateString()}
+        {matruityTs ? new Date(matruityTs * 1000).toLocaleDateString() : "--"}
       </Typography>
     </ListItem>
   );

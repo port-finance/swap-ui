@@ -18,7 +18,10 @@ import {
   useMarket,
   FEE_MULTIPLIER,
 } from "../context/Dex";
-import { useTokenMap } from "../context/TokenList";
+import {
+  usePrincipalTokenMaturityMap,
+  useTokenMap,
+} from "../context/TokenList";
 import { useMint, useOwnedTokenAccount } from "../context/Token";
 import { useCanSwap, useReferral } from "../context/Swap";
 import { SettingsButton } from "./Settings";
@@ -221,7 +224,10 @@ function ChooseMaturityForm({ style }: { style?: any }) {
   return (
     <div className={styles.swapTokenFormContainer} style={style}>
       <div className={styles.maturitySelectorContainer}>
-        <MaturityButton mint={toMint} onClick={() => setShowMaturityDialog(true)} />
+        <MaturityButton
+          mint={toMint}
+          onClick={() => setShowMaturityDialog(true)}
+        />
         <Typography color="textSecondary" className={styles.balanceContainer}>
           {tokenAccount && mintAccount
             ? `Balance: ${balance?.toFixed(mintAccount.decimals)}`
@@ -268,7 +274,7 @@ function MaturityButton({
 
   return (
     <div onClick={onClick} className={styles.tokenButton}>
-      <TokenName mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />
+      <TokenMaturity mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />
       <ExpandMore />
     </div>
   );
@@ -308,6 +314,24 @@ function TokenName({ mint, style }: { mint: PublicKey; style: any }) {
       }}
     >
       {tokenInfo?.symbol}
+    </Typography>
+  );
+}
+
+function TokenMaturity({ mint, style }: { mint: PublicKey; style: any }) {
+  const principalTokenMaturity = usePrincipalTokenMaturityMap();
+  const theme = useTheme();
+  const maturity = principalTokenMaturity.get(mint.toString());
+
+  return (
+    <Typography
+      style={{
+        marginLeft: theme.spacing(2),
+        marginRight: theme.spacing(1),
+        ...style,
+      }}
+    >
+      {maturity ? new Date(maturity * 1000).toLocaleDateString() : "n/a"}
     </Typography>
   );
 }
