@@ -52,15 +52,9 @@ export default function TokenDialog({
   const [tokenFilter, setTokenFilter] = useState("");
   const filter = tokenFilter.toLowerCase();
   const styles = useStyles();
-  const { swappableTokens, swappableTokensSollet, swappableTokensWormhole } =
-    useSwappableTokens();
+  const { swappableTokens } = useSwappableTokens();
   const displayTabs = !useMediaQuery("(max-width:450px)");
-  const selectedTokens =
-    tabSelection === 0
-      ? swappableTokens
-      : tabSelection === 1
-      ? swappableTokensWormhole
-      : swappableTokensSollet;
+  const selectedTokens = swappableTokens;
   let tokens =
     tokenFilter === ""
       ? selectedTokens
@@ -109,36 +103,6 @@ export default function TokenDialog({
           ))}
         </List>
       </DialogContent>
-      {displayTabs && (
-        <DialogActions>
-          <Tabs
-            value={tabSelection}
-            onChange={(e, v) => setTabSelection(v)}
-            classes={{
-              indicator: styles.tabIndicator,
-            }}
-          >
-            <Tab
-              value={0}
-              className={styles.tab}
-              classes={{ selected: styles.tabSelected }}
-              label="Main"
-            />
-            <Tab
-              value={1}
-              className={styles.tab}
-              classes={{ selected: styles.tabSelected }}
-              label="Wormhole"
-            />
-            <Tab
-              value={2}
-              className={styles.tab}
-              classes={{ selected: styles.tabSelected }}
-              label="Sollet"
-            />
-          </Tabs>
-        </DialogActions>
-      )}
     </Dialog>
   );
 }

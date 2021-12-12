@@ -180,7 +180,6 @@ function _useSwapFair(
 export function useCanSwap(): boolean {
   const { fromMint, toMint, fromAmount, toAmount } = useSwapContext();
   const { swapClient } = useDexContext();
-  const { wormholeMap, solletMap } = useTokenListContext();
   const fromWallet = useOwnedTokenAccount(fromMint);
   const fair = useSwapFair();
   const route = useRouteVerbose(fromMint, toMint);
@@ -203,19 +202,7 @@ export function useCanSwap(): boolean {
     fromAmount > 0 &&
     toAmount > 0 &&
     // Trade route exists.
-    route !== null &&
-    // Wormhole <-> native markets must have the wormhole token as the
-    // *from* address since they're one-sided markets.
-    (route.kind !== "wormhole-native" ||
-      wormholeMap
-        .get(fromMint.toString())
-        ?.tags?.includes(SPL_REGISTRY_WORM_TAG) !== undefined) &&
-    // Wormhole <-> sollet markets must have the sollet token as the
-    // *from* address since they're one sided markets.
-    (route.kind !== "wormhole-sollet" ||
-      solletMap
-        .get(fromMint.toString())
-        ?.tags?.includes(SPL_REGISTRY_SOLLET_TAG) !== undefined)
+    route !== null
   );
 }
 

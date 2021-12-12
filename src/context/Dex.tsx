@@ -13,18 +13,10 @@ import {
 } from "@project-serum/serum";
 import {
   DEX_PID,
-  USDC_MINT,
-  USDT_MINT,
   SOL_MINT,
   WRAPPED_SOL_MINT,
-  WORM_USDC_MINT,
-  WORM_USDT_MINT,
-  WORM_USDC_MARKET,
-  WORM_USDT_MARKET,
-  WORM_MARKET_BASE,
 } from "../utils/pubkeys";
-import { useTokenMap, useTokenListContext } from "./TokenList";
-import { fetchSolletInfo, requestWormholeSwapMarketIfNeeded } from "./Sollet";
+import { useTokenMap } from "./TokenList";
 import { setMintCache } from "./Token";
 
 const BASE_TAKER_FEE_BPS = 0.0022;
@@ -427,30 +419,16 @@ export function useRoute(
 //
 // 1. Direct trades on USDC quoted markets.
 // 2. Transitive trades across two USDC qutoed markets.
-// 3. Wormhole <-> Sollet one-to-one swap markets.
-// 4. Wormhole <-> Native one-to-one swap markets.
 //
 export function useRouteVerbose(
   fromMint: PublicKey,
   toMint: PublicKey
 ): { markets: Array<PublicKey>; kind: RouteKind } | null {
   const { swapClient } = useDexContext();
-  const { wormholeMap, solletMap } = useTokenListContext();
   const asyncRoute = useAsync(async () => {
-    const swapMarket = await wormholeSwapMarket(
-      swapClient.program.provider.connection,
-      fromMint,
-      toMint,
-      wormholeMap,
-      solletMap
-    );
-    if (swapMarket !== null) {
-      const [wormholeMarket, kind] = swapMarket;
-      return { markets: [wormholeMarket], kind };
-    }
     const markets = swapClient.route(
-      fromMint.equals(SOL_MINT) ? WRAPPED_SOL_MINT : fromMint,
-      toMint.equals(SOL_MINT) ? WRAPPED_SOL_MINT : toMint
+      fromMint,
+      toMint
     );
     if (markets === null) {
       return null;
@@ -470,140 +448,11 @@ type Orderbook = {
   asks: OrderbookSide;
 };
 
-// Wormhole utils.
-
-type RouteKind = "wormhole-native" | "wormhole-sollet" | "usdx";
-
-// Maps fromMint || toMint (in sort order) to swap market public key.
-// All markets for wormhole<->native tokens should be here, e.g.
-// USDC <-> wUSDC.
-const WORMHOLE_NATIVE_MAP = new Map<string, PublicKey>([
-  [wormKey(WORM_USDC_MINT, USDC_MINT), WORM_USDC_MARKET],
-  [wormKey(WORM_USDT_MINT, USDT_MINT), WORM_USDT_MARKET],
-]);
-
-function wormKey(fromMint: PublicKey, toMint: PublicKey): string {
-  const [first, second] =
-    fromMint < toMint ? [fromMint, toMint] : [toMint, fromMint];
-  return first.toString() + second.toString();
-}
-
-async function wormholeSwapMarket(
-  conn: Connection,
-  fromMint: PublicKey,
-  toMint: PublicKey,
-  wormholeMap: Map<string, TokenInfo>,
-  solletMap: Map<string, TokenInfo>
-): Promise<[PublicKey, RouteKind] | null> {
-  let market = wormholeNativeMarket(fromMint, toMint);
-  if (market !== null) {
-    return [market, "wormhole-native"];
-  }
-  market = await wormholeSolletMarket(
-    conn,
-    fromMint,
-    toMint,
-    wormholeMap,
-    solletMap
-  );
-  if (market === null) {
-    return null;
-  }
-  return [market, "wormhole-sollet"];
-}
-
-function wormholeNativeMarket(
-  fromMint: PublicKey,
-  toMint: PublicKey
-): PublicKey | null {
-  return WORMHOLE_NATIVE_MAP.get(wormKey(fromMint, toMint)) ?? null;
-}
-
-// Returns the market address of the 1-1 sollet<->wormhole swap market if it
-// exists. Otherwise, returns null.
-async function wormholeSolletMarket(
-  conn: Connection,
-  fromMint: PublicKey,
-  toMint: PublicKey,
-  wormholeMap: Map<string, TokenInfo>,
-  solletMap: Map<string, TokenInfo>
-): Promise<PublicKey | null> {
-  const fromWormhole = wormholeMap.get(fromMint.toString());
-  const isFromWormhole = fromWormhole !== undefined;
-
-  const toWormhole = wormholeMap.get(toMint.toString());
-  const isToWormhole = toWormhole !== undefined;
-
-  const fromSollet = solletMap.get(fromMint.toString());
-  const isFromSollet = fromSollet !== undefined;
-
-  const toSollet = solletMap.get(toMint.toString());
-  const isToSollet = toSollet !== undefined;
-
-  if ((isFromWormhole || isToWormhole) && isFromWormhole !== isToWormhole) {
-    if ((isFromSollet || isToSollet) && isFromSollet !== isToSollet) {
-      const base = isFromSollet ? fromMint : toMint;
-      const [quote, wormholeInfo] = isFromWormhole
-        ? [fromMint, fromWormhole]
-        : [toMint, toWormhole];
-
-      const solletInfo = await fetchSolletInfo(base);
-
-      if (solletInfo.erc20Contract !== wormholeInfo!.extensions?.address) {
-        return null;
-      }
-
-      const market = await deriveWormholeMarket(base, quote);
-      if (market === null) {
-        return null;
-      }
-
-      const marketExists = await requestWormholeSwapMarketIfNeeded(
-        conn,
-        base,
-        quote,
-        market,
-        solletInfo
-      );
-      if (!marketExists) {
-        return null;
-      }
-
-      return market;
-    }
-  }
-  return null;
-}
-
-// Calculates the deterministic address for the sollet<->wormhole 1-1 swap
-// market.
-async function deriveWormholeMarket(
-  baseMint: PublicKey,
-  quoteMint: PublicKey,
-  version = 0
-): Promise<PublicKey | null> {
-  if (version > 99) {
-    console.log("Swap market version cannot be greater than 99");
-    return null;
-  }
-  if (version < 0) {
-    console.log("Version cannot be less than zero");
-    return null;
-  }
-
-  const padToTwo = (n: number) => (n <= 99 ? `0${n}`.slice(-2) : n);
-  const seed =
-    baseMint.toString().slice(0, 15) +
-    quoteMint.toString().slice(0, 15) +
-    padToTwo(version);
-  return await PublicKey.createWithSeed(WORM_MARKET_BASE, seed, DEX_PID);
-}
-
+type RouteKind = "usdx";
 type Bbo = {
   bestBid?: number;
   bestOffer?: number;
   mid?: number;
-};
-
+}
 const _ORDERBOOK_CACHE = new Map<string, Promise<Orderbook>>();
 const _MARKET_CACHE = new Map<string, Promise<Market>>();

@@ -4,11 +4,7 @@ import { SOL_MINT } from "../utils/pubkeys";
 
 type TokenListContext = {
   tokenMap: Map<string, TokenInfo>;
-  wormholeMap: Map<string, TokenInfo>;
-  solletMap: Map<string, TokenInfo>;
   swappableTokens: TokenInfo[];
-  swappableTokensSollet: TokenInfo[];
-  swappableTokensWormhole: TokenInfo[];
 };
 const _TokenListContext = React.createContext<null | TokenListContext>(null);
 
@@ -59,7 +55,7 @@ export function TokenListContextProvider(props: any) {
     const tokens = tokenList.filter((t: TokenInfo) => {
       const isUsdxQuoted =
         t.extensions?.serumV3Usdt || t.extensions?.serumV3Usdc;
-      return isUsdxQuoted;
+      return isUsdxQuoted || t.address === "6cKnRJskSTonD6kZiWt2Fy3NB6ZND6CbgA3vHiZ1kHEU";
     });
     tokens.sort((a: TokenInfo, b: TokenInfo) =>
       a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0
@@ -67,45 +63,11 @@ export function TokenListContextProvider(props: any) {
     return tokens;
   }, [tokenList, tokenMap]);
 
-  // Sollet wrapped tokens.
-  const [swappableTokensSollet, solletMap] = useMemo(() => {
-    const tokens = tokenList.filter((t: TokenInfo) => {
-      const isSollet = t.tags?.includes(SPL_REGISTRY_SOLLET_TAG);
-      return isSollet;
-    });
-    tokens.sort((a: TokenInfo, b: TokenInfo) =>
-      a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0
-    );
-    return [
-      tokens,
-      new Map<string, TokenInfo>(tokens.map((t: TokenInfo) => [t.address, t])),
-    ];
-  }, [tokenList]);
-
-  // Wormhole wrapped tokens.
-  const [swappableTokensWormhole, wormholeMap] = useMemo(() => {
-    const tokens = tokenList.filter((t: TokenInfo) => {
-      const isSollet = t.tags?.includes(SPL_REGISTRY_WORM_TAG);
-      return isSollet;
-    });
-    tokens.sort((a: TokenInfo, b: TokenInfo) =>
-      a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0
-    );
-    return [
-      tokens,
-      new Map<string, TokenInfo>(tokens.map((t: TokenInfo) => [t.address, t])),
-    ];
-  }, [tokenList]);
-
   return (
     <_TokenListContext.Provider
       value={{
         tokenMap,
-        wormholeMap,
-        solletMap,
         swappableTokens,
-        swappableTokensWormhole,
-        swappableTokensSollet,
       }}
     >
       {props.children}
@@ -127,7 +89,6 @@ export function useTokenMap(): Map<string, TokenInfo> {
 }
 
 export function useSwappableTokens() {
-  const { swappableTokens, swappableTokensWormhole, swappableTokensSollet } =
-    useTokenListContext();
-  return { swappableTokens, swappableTokensWormhole, swappableTokensSollet };
+  const { swappableTokens } = useTokenListContext();
+  return { swappableTokens };
 }
