@@ -12,6 +12,10 @@ export const USDC_MINT = new PublicKey(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 );
 
+export const MARCH_2022_PP_USDC_MINT = new PublicKey(
+  "6cKnRJskSTonD6kZiWt2Fy3NB6ZND6CbgA3vHiZ1kHEU"
+);
+
 export const USDT_MINT = new PublicKey(
   "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
 );
@@ -23,24 +27,4 @@ export const SOL_MINT = new PublicKey(
 
 export const WRAPPED_SOL_MINT = new PublicKey(
   "So11111111111111111111111111111111111111112"
-);
-
-export const WORM_MARKET_BASE = new PublicKey(
-  "6a9wpsZpZGxGhFVSQBpcTNjNjytdbSA1iUw1A5KNDxPw"
-);
-
-export const WORM_USDC_MINT = new PublicKey(
-  "FVsXUnbhifqJ4LiXQEbpUtXVdB8T5ADLKqSs5t1oc54F"
-);
-
-export const WORM_USDC_MARKET = new PublicKey(
-  "6nGMps9VfDjkKEwYjdSNqN1ToXkLae4VsN49fzBiDFBd"
-);
-
-export const WORM_USDT_MINT = new PublicKey(
-  "9w97GdWUYYaamGwdKMKZgGzPduZJkiFizq4rz5CPXRv2"
-);
-
-export const WORM_USDT_MARKET = new PublicKey(
-  "4v6e6vNXAaEunrvbqkYnKwbaWfck8a2KVR4uRAVXxVwC"
 );

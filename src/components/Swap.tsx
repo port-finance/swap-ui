@@ -1,13 +1,6 @@
 import { useState } from "react";
-import {
-  PublicKey,
-  Keypair,
-  Transaction,
-  SystemProgram,
-  Signer,
-} from "@solana/web3.js";
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { BN, Provider } from "@project-serum/anchor";
+import { PublicKey, Keypair } from "@solana/web3.js";
+import { BN } from "@project-serum/anchor";
 import {
   makeStyles,
   Card,
@@ -16,7 +9,7 @@ import {
   TextField,
   useTheme,
 } from "@material-ui/core";
-import { ExpandMore, ImportExportRounded } from "@material-ui/icons";
+import { ExpandMore } from "@material-ui/icons";
 import { useSwapContext, useSwapFair } from "../context/Swap";
 import {
   useDexContext,
@@ -25,13 +18,16 @@ import {
   useMarket,
   FEE_MULTIPLIER,
 } from "../context/Dex";
-import { useTokenMap } from "../context/TokenList";
+import {
+  usePrincipalTokenMaturityMap,
+  useTokenMap,
+} from "../context/TokenList";
 import { useMint, useOwnedTokenAccount } from "../context/Token";
 import { useCanSwap, useReferral } from "../context/Swap";
-import TokenDialog from "./TokenDialog";
 import { SettingsButton } from "./Settings";
-import { InfoLabel } from "./Info";
-import { SOL_MINT, WRAPPED_SOL_MINT } from "../utils/pubkeys";
+import { InfoLabel, InterestLabel } from "./Info";
+import { SOL_MINT } from "../utils/pubkeys";
+import { MaturityDialog, TokenDialog } from "./TokenDialog";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -80,6 +76,12 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "column",
     width: "50%",
   },
+  maturitySelectorContainer: {
+    marginLeft: theme.spacing(1),
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+  },
   balanceContainer: {
     display: "flex",
     alignItems: "center",
@@ -114,10 +116,10 @@ export default function SwapCard({
     <Card className={styles.card} style={containerStyle}>
       <SwapHeader />
       <div style={contentStyle}>
-        <SwapFromForm style={swapTokenContainerStyle} />
-        <ArrowButton />
-        <SwapToForm style={swapTokenContainerStyle} />
+        <LendTokenForm style={swapTokenContainerStyle} />
+        <ChooseMaturityForm style={swapTokenContainerStyle} />
         <InfoLabel />
+        <InterestLabel />
         <SwapButton />
       </div>
     </Card>
@@ -139,75 +141,20 @@ export function SwapHeader() {
           fontWeight: 700,
         }}
       >
-        SWAP
+        LEND
       </Typography>
       <SettingsButton />
     </div>
   );
 }
 
-export function ArrowButton() {
-  const styles = useStyles();
-  const theme = useTheme();
-  const { swapToFromMints } = useSwapContext();
-  return (
-    <ImportExportRounded
-      className={styles.swapToFromButton}
-      fontSize="large"
-      htmlColor={theme.palette.primary.main}
-      onClick={swapToFromMints}
-    />
-  );
-}
-
-function SwapFromForm({ style }: { style?: any }) {
+function LendTokenForm({ style }: { style?: any }) {
   const { fromMint, setFromMint, fromAmount, setFromAmount } = useSwapContext();
-  return (
-    <SwapTokenForm
-      from
-      style={style}
-      mint={fromMint}
-      setMint={setFromMint}
-      amount={fromAmount}
-      setAmount={setFromAmount}
-    />
-  );
-}
-
-function SwapToForm({ style }: { style?: any }) {
-  const { toMint, setToMint, toAmount, setToAmount } = useSwapContext();
-  return (
-    <SwapTokenForm
-      from={false}
-      style={style}
-      mint={toMint}
-      setMint={setToMint}
-      amount={toAmount}
-      setAmount={setToAmount}
-    />
-  );
-}
-
-export function SwapTokenForm({
-  from,
-  style,
-  mint,
-  setMint,
-  amount,
-  setAmount,
-}: {
-  from: boolean;
-  style?: any;
-  mint: PublicKey;
-  setMint: (m: PublicKey) => void;
-  amount: number;
-  setAmount: (a: number) => void;
-}) {
   const styles = useStyles();
 
   const [showTokenDialog, setShowTokenDialog] = useState(false);
-  const tokenAccount = useOwnedTokenAccount(mint);
-  const mintAccount = useMint(mint);
+  const tokenAccount = useOwnedTokenAccount(fromMint);
+  const mintAccount = useMint(fromMint);
 
   const balance =
     tokenAccount &&
@@ -215,25 +162,25 @@ export function SwapTokenForm({
     tokenAccount.account.amount.toNumber() / 10 ** mintAccount.decimals;
 
   const formattedAmount =
-    mintAccount && amount
-      ? amount.toLocaleString("fullwide", {
+    mintAccount && fromAmount
+      ? fromAmount.toLocaleString("fullwide", {
           maximumFractionDigits: mintAccount.decimals,
           useGrouping: false,
         })
-      : amount;
+      : fromAmount;
 
   return (
     <div className={styles.swapTokenFormContainer} style={style}>
       <div className={styles.swapTokenSelectorContainer}>
-        <TokenButton mint={mint} onClick={() => setShowTokenDialog(true)} />
+        <TokenButton mint={fromMint} onClick={() => setShowTokenDialog(true)} />
         <Typography color="textSecondary" className={styles.balanceContainer}>
           {tokenAccount && mintAccount
             ? `Balance: ${balance?.toFixed(mintAccount.decimals)}`
             : `-`}
-          {from && !!balance ? (
+          {!!balance ? (
             <span
               className={styles.maxButton}
-              onClick={() => setAmount(balance)}
+              onClick={() => setFromAmount(balance)}
             >
               MAX
             </span>
@@ -243,7 +190,7 @@ export function SwapTokenForm({
       <TextField
         type="number"
         value={formattedAmount}
-        onChange={(e) => setAmount(parseFloat(e.target.value))}
+        onChange={(e) => setFromAmount(parseFloat(e.target.value))}
         InputProps={{
           disableUnderline: true,
           classes: {
@@ -253,9 +200,34 @@ export function SwapTokenForm({
         }}
       />
       <TokenDialog
-        setMint={setMint}
+        setMint={setFromMint}
         open={showTokenDialog}
         onClose={() => setShowTokenDialog(false)}
+      />
+    </div>
+  );
+}
+
+function ChooseMaturityForm({ style }: { style?: any }) {
+  const { fromMint, toMint, setToMint } = useSwapContext();
+  const styles = useStyles();
+
+  const [showMaturityDialog, setShowMaturityDialog] = useState(false);
+
+  return (
+    <div className={styles.swapTokenFormContainer} style={style}>
+      <div className={styles.maturitySelectorContainer}>
+        <Typography>Maturity</Typography>
+        <MaturityButton
+          mint={toMint}
+          onClick={() => setShowMaturityDialog(true)}
+        />
+      </div>
+      <MaturityDialog
+        currentTokenMint={fromMint}
+        setMint={setToMint}
+        open={showMaturityDialog}
+        onClose={() => setShowMaturityDialog(false)}
       />
     </div>
   );
@@ -275,6 +247,23 @@ function TokenButton({
     <div onClick={onClick} className={styles.tokenButton}>
       <TokenIcon mint={mint} style={{ width: theme.spacing(4) }} />
       <TokenName mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />
+      <ExpandMore />
+    </div>
+  );
+}
+
+function MaturityButton({
+  mint,
+  onClick,
+}: {
+  mint: PublicKey;
+  onClick: () => void;
+}) {
+  const styles = useStyles();
+
+  return (
+    <div onClick={onClick} className={styles.tokenButton}>
+      <TokenMaturity mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />
       <ExpandMore />
     </div>
   );
@@ -318,6 +307,24 @@ function TokenName({ mint, style }: { mint: PublicKey; style: any }) {
   );
 }
 
+function TokenMaturity({ mint, style }: { mint: PublicKey; style: any }) {
+  const principalTokenMaturity = usePrincipalTokenMaturityMap();
+  const theme = useTheme();
+  const maturity = principalTokenMaturity.get(mint.toString());
+
+  return (
+    <Typography
+      style={{
+        marginLeft: theme.spacing(2),
+        marginRight: theme.spacing(1),
+        ...style,
+      }}
+    >
+      {maturity ? new Date(maturity * 1000).toLocaleDateString() : "n/a"}
+    </Typography>
+  );
+}
+
 export function SwapButton() {
   const styles = useStyles();
   const {
@@ -335,9 +342,6 @@ export function SwapButton() {
   const route = useRouteVerbose(fromMint, toMint);
   const fromMarket = useMarket(
     route && route.markets ? route.markets[0] : undefined
-  );
-  const toMarket = useMarket(
-    route && route.markets ? route.markets[1] : undefined
   );
   const canSwap = useCanSwap();
   const referral = useReferral(fromMarket);
@@ -381,9 +385,6 @@ export function SwapButton() {
       const fromOpenOrders = fromMarket
         ? openOrders.get(fromMarket?.address.toString())
         : undefined;
-      const toOpenOrders = toMarket
-        ? openOrders.get(toMarket?.address.toString())
-        : undefined;
       const fromWalletAddr = fromMint.equals(SOL_MINT)
         ? wrappedSolAccount!.publicKey
         : fromWallet
@@ -403,10 +404,10 @@ export function SwapButton() {
         minExchangeRate,
         referral,
         fromMarket,
-        toMarket,
+        toMarket: undefined,
         // Automatically created if undefined.
         fromOpenOrders: fromOpenOrders ? fromOpenOrders[0].address : undefined,
-        toOpenOrders: toOpenOrders ? toOpenOrders[0].address : undefined,
+        toOpenOrders: undefined,
         fromWallet: fromWalletAddr,
         toWallet: toWalletAddr,
         quoteWallet: quoteWallet ? quoteWallet.publicKey : undefined,
@@ -414,30 +415,6 @@ export function SwapButton() {
         close: isClosingNewAccounts,
       });
     })();
-
-    // If swapping SOL, then insert a wrap/unwrap instruction.
-    if (isSol) {
-      if (txs.length > 1) {
-        throw new Error("SOL must be swapped in a single transaction");
-      }
-      const { tx: wrapTx, signers: wrapSigners } = await wrapSol(
-        swapClient.program.provider,
-        wrappedSolAccount as Keypair,
-        fromMint,
-        amount
-      );
-      const { tx: unwrapTx, signers: unwrapSigners } = unwrapSol(
-        swapClient.program.provider,
-        wrappedSolAccount as Keypair
-      );
-      const tx = new Transaction();
-      tx.add(wrapTx);
-      tx.add(txs[0].tx);
-      tx.add(unwrapTx);
-      txs[0].tx = tx;
-      txs[0].signers.push(...wrapSigners);
-      txs[0].signers.push(...unwrapSigners);
-    }
 
     await swapClient.program.provider.sendAll(txs);
   };
@@ -448,67 +425,7 @@ export function SwapButton() {
       onClick={sendSwapTransaction}
       disabled={!canSwap}
     >
-      Swap
+      Lend
     </Button>
   );
-}
-
-async function wrapSol(
-  provider: Provider,
-  wrappedSolAccount: Keypair,
-  fromMint: PublicKey,
-  amount: BN
-): Promise<{ tx: Transaction; signers: Array<Signer | undefined> }> {
-  const tx = new Transaction();
-  const signers = [wrappedSolAccount];
-  // Create new, rent exempt account.
-  tx.add(
-    SystemProgram.createAccount({
-      fromPubkey: provider.wallet.publicKey,
-      newAccountPubkey: wrappedSolAccount.publicKey,
-      lamports: await Token.getMinBalanceRentForExemptAccount(
-        provider.connection
-      ),
-      space: 165,
-      programId: TOKEN_PROGRAM_ID,
-    })
-  );
-  // Transfer lamports. These will be converted to an SPL balance by the
-  // token program.
-  if (fromMint.equals(SOL_MINT)) {
-    tx.add(
-      SystemProgram.transfer({
-        fromPubkey: provider.wallet.publicKey,
-        toPubkey: wrappedSolAccount.publicKey,
-        lamports: amount.toNumber(),
-      })
-    );
-  }
-  // Initialize the account.
-  tx.add(
-    Token.createInitAccountInstruction(
-      TOKEN_PROGRAM_ID,
-      WRAPPED_SOL_MINT,
-      wrappedSolAccount.publicKey,
-      provider.wallet.publicKey
-    )
-  );
-  return { tx, signers };
-}
-
-function unwrapSol(
-  provider: Provider,
-  wrappedSolAccount: Keypair
-): { tx: Transaction; signers: Array<Signer | undefined> } {
-  const tx = new Transaction();
-  tx.add(
-    Token.createCloseAccountInstruction(
-      TOKEN_PROGRAM_ID,
-      wrappedSolAccount.publicKey,
-      provider.wallet.publicKey,
-      provider.wallet.publicKey,
-      []
-    )
-  );
-  return { tx, signers: [] };
 }

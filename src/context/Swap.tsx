@@ -8,18 +8,17 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { Market } from "@project-serum/serum";
-import { SRM_MINT, USDC_MINT, USDT_MINT } from "../utils/pubkeys";
+import {
+  MARCH_2022_PP_USDC_MINT,
+  USDC_MINT,
+  USDT_MINT,
+} from "../utils/pubkeys";
 import {
   useFairRoute,
   useRouteVerbose,
   useDexContext,
   FEE_MULTIPLIER,
 } from "./Dex";
-import {
-  useTokenListContext,
-  SPL_REGISTRY_SOLLET_TAG,
-  SPL_REGISTRY_WORM_TAG,
-} from "./TokenList";
 import { useOwnedTokenAccount } from "../context/Token";
 
 const DEFAULT_SLIPPAGE_PERCENT = 0.5;
@@ -76,8 +75,8 @@ export type SwapContext = {
 const _SwapContext = React.createContext<null | SwapContext>(null);
 
 export function SwapContextProvider(props: any) {
-  const [fromMint, setFromMint] = useState(props.fromMint ?? SRM_MINT);
-  const [toMint, setToMint] = useState(props.toMint ?? USDC_MINT);
+  const [fromMint, setFromMint] = useState(props.fromMint ?? USDC_MINT);
+  const [toMint, setToMint] = useState(props.toMint ?? MARCH_2022_PP_USDC_MINT);
   const [fromAmount, _setFromAmount] = useState(props.fromAmount ?? 0);
   const [toAmount, _setToAmount] = useState(props.toAmount ?? 0);
   const [isClosingNewAccounts, setIsClosingNewAccounts] = useState(false);
@@ -180,7 +179,6 @@ function _useSwapFair(
 export function useCanSwap(): boolean {
   const { fromMint, toMint, fromAmount, toAmount } = useSwapContext();
   const { swapClient } = useDexContext();
-  const { wormholeMap, solletMap } = useTokenListContext();
   const fromWallet = useOwnedTokenAccount(fromMint);
   const fair = useSwapFair();
   const route = useRouteVerbose(fromMint, toMint);
@@ -203,19 +201,7 @@ export function useCanSwap(): boolean {
     fromAmount > 0 &&
     toAmount > 0 &&
     // Trade route exists.
-    route !== null &&
-    // Wormhole <-> native markets must have the wormhole token as the
-    // *from* address since they're one-sided markets.
-    (route.kind !== "wormhole-native" ||
-      wormholeMap
-        .get(fromMint.toString())
-        ?.tags?.includes(SPL_REGISTRY_WORM_TAG) !== undefined) &&
-    // Wormhole <-> sollet markets must have the sollet token as the
-    // *from* address since they're one sided markets.
-    (route.kind !== "wormhole-sollet" ||
-      solletMap
-        .get(fromMint.toString())
-        ?.tags?.includes(SPL_REGISTRY_SOLLET_TAG) !== undefined)
+    route !== null
   );
 }
 
