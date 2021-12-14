@@ -61,7 +61,10 @@ export function TokenDialog({
       }}
     >
       <DialogTitle style={{ fontWeight: "bold" }}>
-        <Typography variant="h6" style={{ paddingBottom: "16px" }}>
+        <Typography
+          variant="h6"
+          style={{ paddingBottom: "16px", color: "rgba(0, 0, 0, 0.85)" }}
+        >
           Select a token
         </Typography>
       </DialogTitle>
@@ -110,7 +113,10 @@ export function MaturityDialog({
       }}
     >
       <DialogTitle style={{ fontWeight: "bold" }}>
-        <Typography variant="h6" style={{ paddingBottom: "16px" }}>
+        <Typography
+          variant="h6"
+          style={{ paddingBottom: "16px", color: "rgba(0, 0, 0, 0.85)" }}
+        >
           Choose the Maturity
         </Typography>
       </DialogTitle>

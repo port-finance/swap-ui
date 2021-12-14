@@ -77,9 +77,10 @@ const useStyles = makeStyles((theme) => ({
     width: "50%",
   },
   maturitySelectorContainer: {
+    marginTop: theme.spacing(2),
     marginLeft: theme.spacing(1),
     display: "flex",
-    flexDirection: "column",
+    // flexDirection: "column",
     width: "100%",
   },
   balanceContainer: {

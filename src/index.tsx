@@ -59,7 +59,7 @@ export default function Swap(props: SwapProps): ReactElement {
     materialTheme || {
       palette: {
         primary: {
-          main: "#2196F3",
+          main: "#2e325c",
           contrastText: "#FFFFFF",
         },
         secondary: {
