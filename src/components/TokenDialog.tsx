@@ -15,6 +15,7 @@ import {
   usePrincipalTokens,
   useTokens,
 } from "../context/TokenList";
+import dayjs from "dayjs";
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {
@@ -176,7 +177,7 @@ function MaturityListItem({
       style={{ padding: "10px 20px" }}
     >
       <Typography style={{ fontWeight: "bold" }}>
-        {matruityTs ? new Date(matruityTs * 1000).toLocaleDateString() : "--"}
+        {matruityTs ? dayjs.unix(matruityTs).format("MMM DD, YYYY") : "--"}
       </Typography>
     </ListItem>
   );

@@ -28,6 +28,7 @@ import { SettingsButton } from "./Settings";
 import { InfoLabel, InterestLabel } from "./Info";
 import { SOL_MINT } from "../utils/pubkeys";
 import { MaturityDialog, TokenDialog } from "./TokenDialog";
+import dayjs from "dayjs";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -64,8 +65,14 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "right",
   },
   swapTokenFormContainer: {
+    marginTop: theme.spacing(2),
     borderRadius: theme.spacing(2),
     boxShadow: "0px 0px 15px 2px rgba(33,150,243,0.1)",
+    display: "flex",
+    justifyContent: "space-between",
+    padding: theme.spacing(1),
+  },
+  flexContainer: {
     display: "flex",
     justifyContent: "space-between",
     padding: theme.spacing(1),
@@ -77,9 +84,9 @@ const useStyles = makeStyles((theme) => ({
     width: "50%",
   },
   maturitySelectorContainer: {
-    marginTop: theme.spacing(2),
     marginLeft: theme.spacing(1),
     display: "flex",
+    justifyContent: "space-between",
     // flexDirection: "column",
     width: "100%",
   },
@@ -172,34 +179,46 @@ function LendTokenForm({ style }: { style?: any }) {
 
   return (
     <div className={styles.swapTokenFormContainer} style={style}>
-      <div className={styles.swapTokenSelectorContainer}>
-        <TokenButton mint={fromMint} onClick={() => setShowTokenDialog(true)} />
-        <Typography color="textSecondary" className={styles.balanceContainer}>
-          {tokenAccount && mintAccount
-            ? `Balance: ${balance?.toFixed(mintAccount.decimals)}`
-            : `-`}
-          {!!balance ? (
-            <span
-              className={styles.maxButton}
-              onClick={() => setFromAmount(balance)}
-            >
-              MAX
-            </span>
-          ) : null}
-        </Typography>
+      <div>
+        <div className={styles.flexContainer}>
+          <div className={styles.swapTokenSelectorContainer}>
+            <TokenButton
+              mint={fromMint}
+              onClick={() => setShowTokenDialog(true)}
+            />
+          </div>
+          <TextField
+            type="number"
+            value={formattedAmount}
+            onChange={(e) => setFromAmount(parseFloat(e.target.value))}
+            InputProps={{
+              disableUnderline: true,
+              classes: {
+                root: styles.amountInput,
+                input: styles.input,
+              },
+            }}
+          />
+        </div>
+        <div className={styles.flexContainer}>
+          <Typography color="textSecondary" className={styles.balanceContainer}>
+            {tokenAccount && mintAccount
+              ? `Balance: ${balance?.toFixed(mintAccount.decimals)}`
+              : `-`}
+          </Typography>
+          <Typography color="textSecondary" className={styles.balanceContainer}>
+            {!!balance ? (
+              <span
+                className={styles.maxButton}
+                onClick={() => setFromAmount(balance)}
+              >
+                MAX
+              </span>
+            ) : null}
+          </Typography>
+        </div>
       </div>
-      <TextField
-        type="number"
-        value={formattedAmount}
-        onChange={(e) => setFromAmount(parseFloat(e.target.value))}
-        InputProps={{
-          disableUnderline: true,
-          classes: {
-            root: styles.amountInput,
-            input: styles.input,
-          },
-        }}
-      />
+
       <TokenDialog
         setMint={setFromMint}
         open={showTokenDialog}
@@ -321,7 +340,7 @@ function TokenMaturity({ mint, style }: { mint: PublicKey; style: any }) {
         ...style,
       }}
     >
-      {maturity ? new Date(maturity * 1000).toLocaleDateString() : "n/a"}
+      {maturity ? dayjs.unix(maturity).format('MMM DD, YYYY') : "n/a"}
     </Typography>
   );
 }
